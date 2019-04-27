@@ -1,4 +1,5 @@
 import Dexie from 'dexie';
+// import "dexie-export-import";
 
 const db = new Dexie('time-tracker');
 //Solo se ponen los campos a indexar. Segun doc:
@@ -7,5 +8,10 @@ const db = new Dexie('time-tracker');
 db.version(1).stores({
     track: '++id,date_from,date_to,elapsed_time,elapsed_time_text,date',
 });
+
+// db.export = (options) => {
+//     console.info(Dexie);
+//     return Dexie.export(options);
+// };
 
 export default db;

@@ -13,6 +13,7 @@ import TimelapseIcon from '@material-ui/icons/Timelapse';
 import DeleteIcon from '@material-ui/icons/Delete';
 import DoneIcon from '@material-ui/icons/Done';
 import CancelIcon from '@material-ui/icons/Cancel';
+import IDBExportImport from 'indexeddb-export-import';
 
 const styles = theme => ({
     fab: {
@@ -40,6 +41,19 @@ class App extends Component {
         };
 
         this.time_interval_manager = null;
+
+        this.download = (filename, text) => {
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+
+            element.style.display = 'none';
+            document.body.appendChild(element);
+
+            element.click();
+
+            document.body.removeChild(element);
+        };
     }
 
     componentDidMount() {
@@ -82,10 +96,6 @@ class App extends Component {
     };
 
     handlePlay = () => {
-
-        // console.info(Math.trunc(1000 / 1000 / 3600));
-        // console.info(1000 / 1000 % 60);
-
         this.setState({
             ...this.state,
             start_time: Date.now()
@@ -107,7 +117,7 @@ class App extends Component {
         }, 1000);
     };
 
-    handlePause = () => {
+    handleStop = () => {
         clearInterval(this.time_interval_manager);
         const now = Date.now();
 
@@ -137,10 +147,30 @@ class App extends Component {
 
     };
 
+    handleExport = () => {
+        const idb_db = db.backendDB(); // get native IDBDatabase object from Dexie wrapper
+
+        // export to JSON, clear database, and import from JSON
+        IDBExportImport.exportToJsonString(idb_db, (err, jsonString) => {
+            if(err)
+                console.error(err);
+            else {
+                this.download((new Date()).toLocaleString('es-ES') + ".track_bak", jsonString);
+                // IDBExportImport.clearDatabase(idb_db, function(err) {
+                //     if(!err) // cleared data successfully
+                //         IDBExportImport.importFromJsonString(idb_db, jsonString, function(err) {
+                //             if (!err)
+                //                 console.log("Imported data successfully");
+                //         });
+                // });
+            }
+        });
+    };
+
     render() {
         let button = null;
         if (this.state.is_running) {
-            button = <Fab color="primary" className={this.classes.fab} onClick={this.handlePause}>
+            button = <Fab color="primary" className={this.classes.fab} onClick={this.handleStop}>
                 <StopIcon/>
             </Fab>
         }
@@ -182,8 +212,8 @@ class App extends Component {
         return (
             <main style={{display: 'flex', height: '100%', justifyContent: 'center', alignItems: 'center'}}>
                 <div>
-                    <div style={{width: '100%', textAlign: 'center'}}>
-                        <span className="timer">{this.state.elapsed_time_to_show}</span>
+                    <div style={{width: '100%', textAlign: 'center', cursor: 'pointer'}}>
+                        <span className="timer" onClick={this.handleExport}>{this.state.elapsed_time_to_show}</span>
                     </div>
                     <div style={{width: '100%', textAlign: 'center'}}>
                         {button}
