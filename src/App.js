@@ -15,11 +15,110 @@ import DoneIcon from '@material-ui/icons/Done';
 import CancelIcon from '@material-ui/icons/Cancel';
 import IDBExportImport from 'indexeddb-export-import';
 
+import CssBaseline from '@material-ui/core/CssBaseline';
+import Drawer from '@material-ui/core/Drawer';
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
+import Typography from '@material-ui/core/Typography';
+import Divider from '@material-ui/core/Divider';
+import IconButton from '@material-ui/core/IconButton';
+import Badge from '@material-ui/core/Badge';
+import MenuIcon from '@material-ui/icons/Menu';
+import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
+import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import NotificationsIcon from '@material-ui/icons/Notifications';
+import ListSubheader from '@material-ui/core/ListSubheader';
+import DashboardIcon from '@material-ui/icons/Dashboard';
+import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
+import PeopleIcon from '@material-ui/icons/People';
+import BarChartIcon from '@material-ui/icons/BarChart';
+import LayersIcon from '@material-ui/icons/Layers';
+import AssignmentIcon from '@material-ui/icons/Assignment';
+import classNames from 'classnames';
+import DialogGetHours from "./DialogGetHours";
+
+const drawerWidth = 240;
+
 const styles = theme => ({
     fab: {
         // position: 'absolute',
         // bottom: theme.spacing.unit * 2,
         // right: theme.spacing.unit * 2,
+    },
+    root: {
+        display: 'flex',
+        height: '100%'
+    },
+    toolbar: {
+        paddingRight: 24, // keep right padding when drawer closed
+    },
+    toolbarIcon: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        padding: '0 8px',
+        ...theme.mixins.toolbar,
+    },
+    appBar: {
+        zIndex: theme.zIndex.drawer + 1,
+        transition: theme.transitions.create(['width', 'margin'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen,
+        }),
+    },
+    appBarShift: {
+        marginLeft: drawerWidth,
+        width: `calc(100% - ${drawerWidth}px)`,
+        transition: theme.transitions.create(['width', 'margin'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+        }),
+    },
+    menuButton: {
+        marginLeft: 12,
+        marginRight: 36,
+    },
+    menuButtonHidden: {
+        display: 'none',
+    },
+    title: {
+        flexGrow: 1,
+    },
+    drawerPaper: {
+        position: 'relative',
+        whiteSpace: 'nowrap',
+        width: drawerWidth,
+        transition: theme.transitions.create('width', {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+        }),
+    },
+    drawerPaperClose: {
+        overflowX: 'hidden',
+        transition: theme.transitions.create('width', {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen,
+        }),
+        width: theme.spacing.unit * 7,
+        [theme.breakpoints.up('sm')]: {
+            width: theme.spacing.unit * 9,
+        },
+    },
+    appBarSpacer: theme.mixins.toolbar,
+    content: {
+        flexGrow: 1,
+        padding: theme.spacing.unit * 3,
+        height: '100vh',
+        overflow: 'auto',
+    },
+    chartContainer: {
+        marginLeft: -22,
+    },
+    tableContainer: {
+        height: 320,
+    },
+    h5: {
+        marginBottom: theme.spacing.unit * 2,
     },
 });
 
@@ -38,7 +137,9 @@ class App extends Component {
             is_running: false,
             track_history: [],
             show_confirmation_at_id: null,
-            current_track_id: null
+            current_track_id: null,
+            is_drawer_open: false,
+            is_dialog_get_hours_open: false,
         };
 
         this.time_interval_manager = null;
@@ -185,6 +286,34 @@ class App extends Component {
         })
     };
 
+    handleDrawerOpen = () => {
+        this.setState({
+            ...this.state,
+            is_drawer_open: true
+        });
+    };
+
+    handleDrawerClose = () => {
+        this.setState({
+            ...this.state,
+            is_drawer_open: false
+        });
+    };
+
+    handleDialogGetHoursOpen = () => {
+        this.setState({
+            ...this.state,
+            is_dialog_get_hours_open: true
+        })
+    };
+
+    handleDialogGetHoursClose = () => {
+        this.setState({
+            ...this.state,
+            is_dialog_get_hours_open: false
+        })
+    };
+
     render() {
         let button = null;
         if (this.state.is_running) {
@@ -228,21 +357,103 @@ class App extends Component {
         }
 
         return (
-            <main style={{display: 'flex', height: '100%', justifyContent: 'center', alignItems: 'center'}}>
-                <div>
-                    <div style={{width: '100%', textAlign: 'center', cursor: 'pointer'}}>
-                        <span className="timer" onClick={this.handleExport}>{this.state.elapsed_time_to_show}</span>
+            <div className={this.classes.root}>
+                <CssBaseline/>
+                <Drawer
+                    variant="permanent"
+                    classes={{
+                        paper: classNames(this.classes.drawerPaper, !this.state.is_drawer_open && this.classes.drawerPaperClose),
+                    }}
+                    open={this.state.is_drawer_open}
+                >
+                    <div className={this.classes.toolbarIcon} style={{display: this.state.is_drawer_open? 'flex': 'none'}}>
+                        <IconButton onClick={this.handleDrawerClose}>
+                            <ChevronLeftIcon/>
+                        </IconButton>
                     </div>
-                    <div style={{width: '100%', textAlign: 'center'}}>
-                        {button}
+                    <div className={this.classes.toolbarIcon} style={{display: this.state.is_drawer_open? 'none': 'flex'}}>
+                        <IconButton onClick={this.handleDrawerOpen}>
+                            <ChevronRightIcon/>
+                        </IconButton>
                     </div>
-                    <div style={{width: '100%'}}>
-                        <List component="nav">
-                            {listItems}
-                        </List>
+                    <Divider/>
+                    <List>
+                        <div>
+                            <ListItem button onClick={this.handleDialogGetHoursOpen}>
+                                <ListItemIcon>
+                                    <TimelapseIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Get Hours" />
+                            </ListItem>
+                        </div>
+                    </List>
+                    <Divider/>
+                    <List>
+                        <div>
+                            <ListSubheader inset>Saved reports</ListSubheader>
+                            <ListItem button>
+                                <ListItemIcon>
+                                    <ShoppingCartIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Orders" />
+                            </ListItem>
+                            <ListItem button>
+                                <ListItemIcon>
+                                    <PeopleIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Customers" />
+                            </ListItem>
+                            <ListItem button>
+                                <ListItemIcon>
+                                    <BarChartIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Reports" />
+                            </ListItem>
+                            <ListItem button>
+                                <ListItemIcon>
+                                    <LayersIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Integrations" />
+                            </ListItem>
+                            <ListItem button>
+                                <ListItemIcon>
+                                    <AssignmentIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Current month" />
+                            </ListItem>
+                            <ListItem button>
+                                <ListItemIcon>
+                                    <AssignmentIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Last quarter" />
+                            </ListItem>
+                            <ListItem button>
+                                <ListItemIcon>
+                                    <AssignmentIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Year-end sale" />
+                            </ListItem>
+                        </div>
+                    </List>
+                </Drawer>
+                <main style={{display: 'flex', height: '100%', justifyContent: 'center', /*alignItems: 'center'*/}} className={this.classes.content}>
+                    <div className={this.classes.appBarSpacer}/>
+                    <div>
+                        <div style={{width: '100%', textAlign: 'center', cursor: 'pointer'}}>
+                            <span className="timer" onClick={this.handleExport}>{this.state.elapsed_time_to_show}</span>
+                        </div>
+                        <div style={{width: '100%', textAlign: 'center'}}>
+                            {button}
+                        </div>
+                        <div style={{width: '100%'}}>
+                            <List component="nav">
+                                {listItems}
+                            </List>
+                        </div>
                     </div>
-                </div>
-            </main>
+                </main>
+                <DialogGetHours isOpen={this.state.is_dialog_get_hours_open} onAdd={this.handleOnAdd} onClose={this.handleDialogGetHoursClose}/>
+            </div>
         );
     }
 }
