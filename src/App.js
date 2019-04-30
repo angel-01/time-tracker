@@ -37,7 +37,8 @@ class App extends Component {
             start_time: null,
             is_running: false,
             track_history: [],
-            show_confirmation_at_id: null
+            show_confirmation_at_id: null,
+            current_track_id: null
         };
 
         this.time_interval_manager = null;
@@ -96,38 +97,43 @@ class App extends Component {
     };
 
     handlePlay = () => {
+        const now = Date.now();
         this.setState({
             ...this.state,
-            start_time: Date.now()
+            start_time: now
         });
-        this.time_interval_manager = setInterval(() => {
-            const new_now = Date.now();
-            const elapsed_time = new_now - this.state.start_time;
+        db.track.put({
+            date_from: now,
+            date: new Date(now)
+        })
+            .then((x) => {
+                this.setState({
+                    ...this.state,
+                    current_track_id: x
+                });
 
-            const hours = Math.trunc(elapsed_time / 1000 / 3600);
-            const minutes = Math.trunc(elapsed_time / 1000 % 3600 / 60);
-            const seconds = Math.trunc(elapsed_time / 1000 % 3600 % 60);
-            const elapsed_time_to_show = ("" + hours).padStart(2, '0') + ":" + ("" + minutes).padStart(2, '0') + ":" + ("" + seconds).padStart(2, '0');
-            this.setState({
-                ...this.state,
-                elapsed_time: elapsed_time,
-                elapsed_time_to_show: elapsed_time_to_show,
-                is_running: true
+                this.time_interval_manager = setInterval(() => {
+                    const new_now = Date.now();
+                    const elapsed_time = new_now - this.state.start_time;
+
+                    const hours = Math.trunc(elapsed_time / 1000 / 3600);
+                    const minutes = Math.trunc(elapsed_time / 1000 % 3600 / 60);
+                    const seconds = Math.trunc(elapsed_time / 1000 % 3600 % 60);
+                    const elapsed_time_to_show = ("" + hours).padStart(2, '0') + ":" + ("" + minutes).padStart(2, '0') + ":" + ("" + seconds).padStart(2, '0');
+                    this.setState({
+                        ...this.state,
+                        elapsed_time: elapsed_time,
+                        elapsed_time_to_show: elapsed_time_to_show,
+                        is_running: true
+                    });
+                    this.updateCurrentTrack();
+                }, 1000);
             });
-        }, 1000);
     };
 
     handleStop = () => {
         clearInterval(this.time_interval_manager);
-        const now = Date.now();
-
-        db.track.put({
-            date_from: this.state.start_time,
-            date_to: Date.now(),
-            elapsed_time: now - this.state.start_time,
-            elapsed_time_text: this.state.elapsed_time_to_show,
-            date: new Date(this.state.start_time)
-        })
+        this.updateCurrentTrack()
             .then(() => {
 
                 return db.track.reverse().toArray();
@@ -165,6 +171,18 @@ class App extends Component {
                 // });
             }
         });
+    };
+
+    updateCurrentTrack = () => {
+        const now = Date.now();
+
+        return db.track.where(":id").equals(this.state.current_track_id).modify({
+            date_from: this.state.start_time,
+            date_to: now,
+            elapsed_time: now - this.state.start_time,
+            elapsed_time_text: this.state.elapsed_time_to_show,
+            date: new Date(this.state.start_time)
+        })
     };
 
     render() {
