@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import './App.css';
 import Fab from '@material-ui/core/Fab';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import CloseIcon from '@material-ui/icons/Close';
 import StopIcon from '@material-ui/icons/Stop';
 import {withStyles} from '@material-ui/core/styles';
 import db from './lib/db';
@@ -203,10 +204,26 @@ class App extends Component {
             ...this.state,
             start_time: now
         });
-        db.track.put({
-            date_from: now,
-            date: new Date(now)
-        })
+        db.app_state.where(':id').equals(1).first()
+            .then(x => {
+                if(!x){
+                    console.info('no esta');
+                    return db.app_state.put({
+                        id: 1,
+                        current_period: 1
+                    })
+                        .then(() => db.app_state.where(':id').equals(1).first())
+                }
+
+                return Promise.resolve(x);
+            })
+            .then((x) => {
+                return db.track.put({
+                    date_from: now,
+                    date: new Date(now),
+                    period: x.current_period
+                })
+            })
             .then((x) => {
                 this.setState({
                     ...this.state,
@@ -314,6 +331,16 @@ class App extends Component {
         })
     };
 
+    handleClosePeriod = () => {
+        if(this.state.is_running)
+            alert("Stop first!!!");
+        else
+            db.app_state.where(':id').equals(1).first()
+                .then((x) => db.app_state.where(':id').equals(1).modify({
+                    current_period: x.current_period + 1
+                }));
+    };
+
     render() {
         let button = null;
         if (this.state.is_running) {
@@ -385,18 +412,18 @@ class App extends Component {
                                 </ListItemIcon>
                                 <ListItemText primary="Get Hours" />
                             </ListItem>
+                            <ListItem button onClick={this.handleClosePeriod}>
+                                <ListItemIcon>
+                                    <CloseIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Close Period" />
+                            </ListItem>
                         </div>
                     </List>
                     <Divider/>
                     <List>
                         <div>
                             <ListSubheader inset>Saved reports</ListSubheader>
-                            <ListItem button>
-                                <ListItemIcon>
-                                    <ShoppingCartIcon />
-                                </ListItemIcon>
-                                <ListItemText primary="Orders" />
-                            </ListItem>
                             <ListItem button>
                                 <ListItemIcon>
                                     <PeopleIcon />
