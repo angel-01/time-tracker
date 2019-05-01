@@ -14,6 +14,7 @@ import TimelapseIcon from '@material-ui/icons/Timelapse';
 import DeleteIcon from '@material-ui/icons/Delete';
 import DoneIcon from '@material-ui/icons/Done';
 import CancelIcon from '@material-ui/icons/Cancel';
+import CalendarTodayIcon from '@material-ui/icons/CalendarToday';
 import IDBExportImport from 'indexeddb-export-import';
 
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -37,6 +38,7 @@ import LayersIcon from '@material-ui/icons/Layers';
 import AssignmentIcon from '@material-ui/icons/Assignment';
 import classNames from 'classnames';
 import DialogGetHours from "./DialogGetHours";
+import DialogGetPeriodHours from "./DialogGetPeriodHours";
 
 const drawerWidth = 240;
 
@@ -141,6 +143,7 @@ class App extends Component {
             current_track_id: null,
             is_drawer_open: false,
             is_dialog_get_hours_open: false,
+            is_dialog_get_period_hours_open: false,
         };
 
         this.time_interval_manager = null;
@@ -324,10 +327,24 @@ class App extends Component {
         })
     };
 
+    handleDialogGetPeriodHoursOpen = () => {
+        this.setState({
+            ...this.state,
+            is_dialog_get_period_hours_open: true
+        })
+    };
+
     handleDialogGetHoursClose = () => {
         this.setState({
             ...this.state,
             is_dialog_get_hours_open: false
+        })
+    };
+
+    handleDialogGetPeriodHoursClose = () => {
+        this.setState({
+            ...this.state,
+            is_dialog_get_period_hours_open: false
         })
     };
 
@@ -418,18 +435,18 @@ class App extends Component {
                                 </ListItemIcon>
                                 <ListItemText primary="Close Period" />
                             </ListItem>
+                            <ListItem button onClick={this.handleDialogGetPeriodHoursOpen}>
+                                <ListItemIcon>
+                                    <CalendarTodayIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Get Period's Hours" />
+                            </ListItem>
                         </div>
                     </List>
                     <Divider/>
                     <List>
                         <div>
                             <ListSubheader inset>Saved reports</ListSubheader>
-                            <ListItem button>
-                                <ListItemIcon>
-                                    <PeopleIcon />
-                                </ListItemIcon>
-                                <ListItemText primary="Customers" />
-                            </ListItem>
                             <ListItem button>
                                 <ListItemIcon>
                                     <BarChartIcon />
@@ -479,7 +496,8 @@ class App extends Component {
                         </div>
                     </div>
                 </main>
-                <DialogGetHours isOpen={this.state.is_dialog_get_hours_open} onAdd={this.handleOnAdd} onClose={this.handleDialogGetHoursClose}/>
+                <DialogGetHours isOpen={this.state.is_dialog_get_hours_open} onClose={this.handleDialogGetHoursClose}/>
+                <DialogGetPeriodHours isOpen={this.state.is_dialog_get_period_hours_open} onClose={this.handleDialogGetPeriodHoursClose}/>
             </div>
         );
     }
