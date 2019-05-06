@@ -210,7 +210,6 @@ class App extends Component {
         db.app_state.where(':id').equals(1).first()
             .then(x => {
                 if(!x){
-                    console.info('no esta');
                     return db.app_state.put({
                         id: 1,
                         current_period: 1
@@ -358,6 +357,39 @@ class App extends Component {
                 }));
     };
 
+    handleFileDrop = (e) => {
+        if(e.dataTransfer.files.length > 0){
+            const file = e.dataTransfer.files[0];
+
+            const reader = new FileReader();
+
+            reader.onabort = () => console.log('file reading was aborted');
+            reader.onerror = () => console.log('file reading has failed');
+            reader.onload = () => {
+                // Do whatever you want with the file contents
+                const binaryStr = reader.result;
+                const idb_db = db.backendDB();
+                IDBExportImport.clearDatabase(idb_db, function(err) {
+                    if(!err) // cleared data successfully
+                        IDBExportImport.importFromJsonString(idb_db, binaryStr, function(err) {
+                            if (err)
+                                console.log(err);
+                            window.location.reload(true);
+                        });
+                });
+            };
+
+            reader.readAsBinaryString(file);
+        }
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    handleDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
     render() {
         let button = null;
         if (this.state.is_running) {
@@ -480,22 +512,29 @@ class App extends Component {
                         </div>
                     </List>
                 </Drawer>
-                <main style={{display: 'flex', height: '100%', justifyContent: 'center', /*alignItems: 'center'*/}} className={this.classes.content}>
-                    <div className={this.classes.appBarSpacer}/>
-                    <div>
-                        <div style={{width: '100%', textAlign: 'center', cursor: 'pointer'}}>
-                            <span className="timer" onClick={this.handleExport}>{this.state.elapsed_time_to_show}</span>
+                {/*<ReactDropzone onDrop={this.handleFileDrop}>*/}
+                    <main style={{display: 'flex', height: '100%', justifyContent: 'center', /*alignItems: 'center'*/}}
+                          className={this.classes.content}
+                          onDragOver={this.handleDragOver}
+                          onDropCapture={this.handleFileDrop}
+                    >
+                        <div className={this.classes.appBarSpacer}/>
+                        <div>
+                            <div style={{width: '100%', textAlign: 'center', cursor: 'pointer'}}>
+                                <span className="timer" onClick={this.handleExport}>{this.state.elapsed_time_to_show}</span>
+                            </div>
+                            <div style={{width: '100%', textAlign: 'center'}}>
+                                {button}
+                            </div>
+                            <div style={{width: '100%'}}>
+                                <List component="nav">
+                                    {listItems}
+                                </List>
+                            </div>
                         </div>
-                        <div style={{width: '100%', textAlign: 'center'}}>
-                            {button}
-                        </div>
-                        <div style={{width: '100%'}}>
-                            <List component="nav">
-                                {listItems}
-                            </List>
-                        </div>
-                    </div>
-                </main>
+                    </main>
+                {/*</ReactDropzone>*/}
+
                 <DialogGetHours isOpen={this.state.is_dialog_get_hours_open} onClose={this.handleDialogGetHoursClose}/>
                 <DialogGetPeriodHours isOpen={this.state.is_dialog_get_period_hours_open} onClose={this.handleDialogGetPeriodHoursClose}/>
             </div>
