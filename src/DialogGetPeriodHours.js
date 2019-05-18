@@ -38,32 +38,8 @@ export default class DialogGetPeriodHours extends React.Component {
     }
 
     componentDidMount(){
-        db.app_state.where(':id').equals(1).first()
-            .then((x) => {
-                if(x){
-                    db.track.where('period').equals(x.current_period).toArray()
-                        .then(z => {
-                            this.setState({
-                                ...this.state,
-                                current_period: x.current_period,
-                                hours: this.computeHours(z)
-                            })
-                        })
-                }
-            })
+
     }
-
-    handleAdd = () => {
-
-        db.company.put({
-            name: this.state.name
-        })
-            .then(() => {
-                this.props.onAdd();
-            });
-
-        this.setState({ open: false });
-    };
 
     handleClose = () => {
         this.setState({ open: false });
@@ -74,9 +50,24 @@ export default class DialogGetPeriodHours extends React.Component {
         // You don't have to do this check first, but it can help prevent an unneeded render
         if (nextProps.isOpen !== this.state.open) {
             this.setState(
-                {
-                    open: nextProps.isOpen
-                });
+            {
+                open: nextProps.isOpen
+            });
+            if(nextProps.isOpen){
+                db.app_state.where(':id').equals(1).first()
+                    .then((x) => {
+                        if(x){
+                            db.track.where('period').equals(x.current_period).toArray()
+                                .then(z => {
+                                    this.setState({
+                                        ...this.state,
+                                        current_period: x.current_period,
+                                        hours: this.computeHours(z)
+                                    })
+                                })
+                        }
+                    })
+            }
         }
     }
 
@@ -120,9 +111,6 @@ export default class DialogGetPeriodHours extends React.Component {
                             <Button onClick={this.handleClose} color="primary">
                                 Ok
                             </Button>
-                            {/*<Button onClick={this.handleAdd} color="primary">*/}
-                                {/*Add*/}
-                            {/*</Button>*/}
                         </DialogActions>
                     </Dialog>
                 </div>
