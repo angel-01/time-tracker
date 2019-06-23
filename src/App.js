@@ -12,6 +12,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import TimelapseIcon from '@material-ui/icons/Timelapse';
 import DeleteIcon from '@material-ui/icons/Delete';
+import EditIcon from '@material-ui/icons/Edit';
 import DoneIcon from '@material-ui/icons/Done';
 import CancelIcon from '@material-ui/icons/Cancel';
 import CalendarTodayIcon from '@material-ui/icons/CalendarToday';
@@ -39,6 +40,7 @@ import AssignmentIcon from '@material-ui/icons/Assignment';
 import classNames from 'classnames';
 import DialogGetHours from "./DialogGetHours";
 import DialogGetPeriodHours from "./DialogGetPeriodHours";
+import DialogEditHours from "./DialogEditHours";
 
 const drawerWidth = 240;
 
@@ -144,6 +146,8 @@ class App extends Component {
             is_drawer_open: false,
             is_dialog_get_hours_open: false,
             is_dialog_get_period_hours_open: false,
+            is_dialog_edit_hours_open: false,
+            selected: null
         };
 
         this.time_interval_manager = null;
@@ -333,6 +337,14 @@ class App extends Component {
         })
     };
 
+    handleDialogEditHoursOpen = (e) => {
+        this.setState({
+            ...this.state,
+            is_dialog_edit_hours_open: true,
+            selected: e.currentTarget.dataset.id
+        })
+    };
+
     handleDialogGetHoursClose = () => {
         this.setState({
             ...this.state,
@@ -345,6 +357,16 @@ class App extends Component {
             ...this.state,
             is_dialog_get_period_hours_open: false
         })
+    };
+
+    handleDialogEditHoursClose = () => {
+        db.track.reverse().toArray().then((x) => {
+            this.setState({
+                ...this.state,
+                track_history: x,
+                is_dialog_edit_hours_open: false
+            });
+        });
     };
 
     handleClosePeriod = () => {
@@ -391,6 +413,7 @@ class App extends Component {
     };
 
     render() {
+        console.info('en render', this.state.selected);
         let button = null;
         if (this.state.is_running) {
             button = <Fab color="primary" className={this.classes.fab} onClick={this.handleStop}>
@@ -408,11 +431,21 @@ class App extends Component {
         for (let i of this.state.track_history) {
             const date = new Date(i.date);
             listItems.push(
-                <ListItem button key={i.id} onClick={this.handleSelectCompany} data-id={i.id} data-name={i.name}>
+                <ListItem button key={i.id} data-id={i.id} data-name={i.name}>
                     <ListItemIcon style={{marginRight: '5px'}}>
                         <TimelapseIcon color={"primary"}/>
                     </ListItemIcon>
-                    <ListItemText primary={date.toDateString() + ': ' + i.elapsed_time_text} style={{paddingLeft: 0}}/>
+                    <ListItemText
+                        primary={date.toDateString() + ': ' + i.elapsed_time_text}
+                        style={{paddingLeft: 0}}
+                        />
+                    <ListItemIcon
+                        style={{marginRight: '5px'}}
+                        onClick={this.handleDialogEditHoursOpen}
+                        data-id={i.id}>
+
+                        <EditIcon color={"primary"}/>
+                    </ListItemIcon>
                     <ListItemIcon
                         style={{marginRight: '5px', display: i.id !== this.state.show_confirmation_at_id? 'inherit': 'none'}}
                         onClick={this.handleDelete}
@@ -537,6 +570,7 @@ class App extends Component {
 
                 <DialogGetHours isOpen={this.state.is_dialog_get_hours_open} onClose={this.handleDialogGetHoursClose}/>
                 <DialogGetPeriodHours isOpen={this.state.is_dialog_get_period_hours_open} onClose={this.handleDialogGetPeriodHoursClose}/>
+                <DialogEditHours isOpen={this.state.is_dialog_edit_hours_open} onClose={this.handleDialogEditHoursClose} track_id={this.state.selected}/>
             </div>
         );
     }
